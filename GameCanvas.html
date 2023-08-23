@@ -32,6 +32,16 @@
 
                 const STATE_CHANGE_INTERVAL = 20;
 
+                const PADDLE_STEP = 3;
+                const P1_UP_BUTTON = 'KeyS';
+                const P1_DOWN_BUTTON = 'KeyZ';
+                const P2_UP_BUTTON = 'KeyK';
+                const P2_DOWN_BUTTON = 'KeyM';
+
+                const UP_ACTION = "up";
+                const DOWN_ACTION = "down";
+                const STOP_ACTION = "stop";
+
                 ctx.fillStyle = "rgb(204, 0, 153)";
                 ctx.font = "30px Arial";
 
@@ -58,6 +68,8 @@
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                 }
 
+                //STATES
+
                 let ballX = BALL_START_X;
                 let ballY = BALL_START_Y;
                 let ballDX = BALL_START_DX;
@@ -66,6 +78,8 @@
                 let p2PaddleY = PADDLE_START_Y;
                 let p1Points = 0;
                 let p2Points = 0;
+                let p1Action = STOP_ACTION;
+                let p2Action = STOP_ACTION;
 
                 function drawState() {
                     clearCanvas();
@@ -77,15 +91,11 @@
                 }
 
                 function updateState() {
+                  movePaddles();
+                  
                     ballX += ballDX;
                     ballY += ballDY;
-
-                    p1PaddleY++;
-                    p2PaddleY--;
-                    p1Points++;
-                    p2Points += 3;
-
-                }
+                };
 
                 function updateAndDrawState() {
                     updateState();
@@ -94,6 +104,35 @@
 
                 setInterval(updateAndDrawState, STATE_CHANGE_INTERVAL);
 
+                window.addEventListener('keydown', function (event) {
+                    const code = event.code;
+                    if (code === P1_UP_BUTTON) {
+                        p1Action = UP_ACTION;
+                    } else if (code ===  P1_DOWN_BUTTON) {
+                        p1Action = DOWN_ACTION;
+                    } else if (code === P2_UP_BUTTON) {
+                        p2Action = UP_ACTION;
+                    } else if (code === P2_DOWN_BUTTON) {
+                        p2Action = DOWN_ACTION;
+                    }
+                });
+
+                 window.addEventListener('keyup', function (event) {
+                    console.log('keyup' + event.code);
+                });
+
+                function movePaddles() {
+                    if (p1Action === UP_ACTION) {
+                        p1PaddleY -= PADDLE_STEP;
+                    } else if (p1Action === DOWN_ACTION) {
+                        p1PaddleY += PADDLE_STEP;
+                    }
+                    if (p2Action === UP_ACTION) {
+                        p2PaddleY -= PADDLE_STEP;
+                    } else if (p2Action === DOWN_ACTION) {
+                        p2PaddleY += PADDLE_STEP;
+                    }
+                }
         
             </script>
         </body>
