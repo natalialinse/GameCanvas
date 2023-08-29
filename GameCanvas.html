@@ -131,14 +131,14 @@
 
         function movePaddles() {
             if (p1Action === UP_ACTION) {
-                p1PaddleY = coerceIn(p1PaddleY - PADDLE_STEP);
+                p1PaddleY = coercePaddle(p1PaddleY - PADDLE_STEP);
             } else if (p1Action === DOWN_ACTION) {
-                p1PaddleY = coerceIn(p1PaddleY + PADDLE_STEP);
+                p1PaddleY = coercePaddle(p1PaddleY + PADDLE_STEP);
             }
             if (p2Action === UP_ACTION) {
-                p2PaddleY = coerceIn(p2PaddleY - PADDLE_STEP);
+                p2PaddleY = coercePaddle(p2PaddleY - PADDLE_STEP);
             } else if (p2Action === DOWN_ACTION) {
-                p2PaddleY = coerceIn(p2PaddleY + PADDLE_STEP);
+                p2PaddleY = coercePaddle(p2PaddleY + PADDLE_STEP);
             }
         }
 
