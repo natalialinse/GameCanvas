@@ -30,7 +30,7 @@
         const BALL_START_DX = 4.5;
         const BALL_START_DY = 1.5;
 
-        const STATE_CHANGE_INTERVAL = 20;
+        const STATE_CHANGE_INTERVAL = 30;
 
         const PADDLE_STEP = 3;
         const P1_UP_BUTTON = 'KeyS';
@@ -46,6 +46,14 @@
 
         ctx.fillStyle = "rgb(204, 0, 153)";
         ctx.font = "30px Arial";
+
+        function coerceIn(value, min, max) {
+            return Math.max(Math.min(value, max), min);
+        }
+
+        function isInBetween(value, min, max) {
+            return value >= min && value <= max;
+        }
 
         function drawPaddle(x, y) {
             ctx.fillRect(x, y, PADDLE_WIDTH, PADDLE_HEIGHT);
@@ -84,26 +92,11 @@
         let p2Action = STOP_ACTION;
         let paused = false;
 
-        function drawState() {
-            clearCanvas();
-            drawPoints(p1Points.toString(), BOARD_P1_X);
-            drawPoints(p2Points.toString(), BOARD_P2_X);
-            drawBall(ballX, ballY);
-            drawPaddle(PADDLE_P1_X, p1PaddleY);
-            drawPaddle(PADDLE_P2_X, p2PaddleY);
+        function coercePaddle(paddleY) {
+            const minPaddleY = 0;
+            const maxPaddleY = CANVAS_HEIGHT - PADDLE_HEIGHT;
+            return coerceIn(paddleY, minPaddleY, maxPaddleY);
         }
-
-        function updateState() {
-            movePaddles();
-        }
-
-        function updateAndDrawState() {
-            if (paused) return;
-            updateState();
-            drawState();
-        }
-
-        setInterval(updateAndDrawState, STATE_CHANGE_INTERVAL);
 
         window.addEventListener('keydown', function (event) {
             let code = event.code;
@@ -135,23 +128,98 @@
             } else if (p1Action === DOWN_ACTION) {
                 p1PaddleY = coercePaddle(p1PaddleY + PADDLE_STEP);
             }
-            if (p2Action === UP_ACTION) {
+            if (p2Action === UP_ACTION && p2PaddleY >= 0) {
                 p2PaddleY = coercePaddle(p2PaddleY - PADDLE_STEP);
             } else if (p2Action === DOWN_ACTION) {
                 p2PaddleY = coercePaddle(p2PaddleY + PADDLE_STEP);
             }
         }
 
-        function coerceIn(value, min, max) {
-            return Math.max(Math.min(value, max), min);
+        function shouldBounceBallFromTopWall() {
+            return ballY < BALL_R && ballDY < 0;
         }
 
-        function coercePaddle(paddleY) {
-            const minPaddleY = 0;
-            const maxPaddleY = CANVAS_HEIGHT - PADDLE_HEIGHT;
-            return coerceIn(paddleY, minPaddleY, maxPaddleY);
+        function shouldBounceBallFromBottomWall() {
+            return ballY + BALL_R > CANVAS_HEIGHT && ballDY > 0;
         }
 
+        function moveBallByStep() {
+            ballX += ballDX;
+            ballY += ballDY;
+        }
+
+        function bounceBallFromWall() {
+            ballDY = -ballDY;
+        }
+
+        function bounceBallFromPaddle() {
+            ballDX = -ballDX;
+        }
+
+        function moveBallToStart() {
+            ballX = BALL_START_X;
+            ballY = BALL_START_Y;
+        }
+
+        function ballIsOutsideOnLeft() {
+            return ballX + BALL_R < 0;
+        }
+
+        function ballIsOutsideOnRight() {
+            return ballX - BALL_R > CANVAS_WIDTH;
+        }
+
+        function isBallOnTheSameHeightAsPaddle(paddleY) {
+            return isInBetween(ballY, paddleY, paddleY + PADDLE_HEIGHT);
+        }
+
+        function shouldBounceFromLeftPaddle() {
+            return ballDX < 0 && isInBetween(ballX - BALL_R, PADDLE_P1_X, PADDLE_P1_X + PADDLE_WIDTH) && isBallOnTheSameHeightAsPaddle(p1PaddleY);
+        }
+        function shouldBounceFromRightPaddle() {
+            return ballDX > 0 && isInBetween(ballX + BALL_R, PADDLE_P2_X, PADDLE_P2_X + PADDLE_WIDTH) && isBallOnTheSameHeightAsPaddle(p2PaddleY);
+        }
+
+        function moveBall() {
+            if (shouldBounceBallFromTopWall() || shouldBounceBallFromBottomWall()) {
+                bounceBallFromWall();
+            }
+            if (shouldBounceFromLeftPaddle() || shouldBounceFromRightPaddle()) {
+                bounceBallFromPaddle();
+            }
+
+            if (ballIsOutsideOnLeft()) {
+                moveBallToStart();
+                p2Points++;
+            } else if (ballIsOutsideOnRight()) {
+                moveBallToStart();
+                p1Points++;
+            }
+
+            moveBallByStep();
+        }
+
+        function updateState() {
+            moveBall();
+            movePaddles();
+        }
+
+        function drawState() {
+            clearCanvas();
+            drawPoints(p1Points.toString(), BOARD_P1_X);
+            drawPoints(p2Points.toString(), BOARD_P2_X);
+            drawBall(ballX, ballY);
+            drawPaddle(PADDLE_P1_X, p1PaddleY);
+            drawPaddle(PADDLE_P2_X, p2PaddleY);
+        }
+
+        function updateAndDrawState() {
+            if (paused) return;
+            updateState();
+            drawState();
+        }
+
+        setInterval(updateAndDrawState, STATE_CHANGE_INTERVAL);
     </script>
 </body>
 
