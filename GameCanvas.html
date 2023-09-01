@@ -122,6 +122,53 @@
             }
         });
 
+        //OBJECTS
+
+        function Ball() {
+            return {
+                x: BALL_START_X,
+                y: BALL_START_Y,
+                dx: BALL_START_DX,
+                dy: BALL_START_DY,
+                moveByStep: function () {
+                    this.x += this.dx;
+                    this.y += this.dy;
+                },
+                shouldBounceFromTOpBall: function () {
+                    this.y < BALL_R && this.dy < 0;
+                },
+                shouldBounceFromBottomwall: function () {
+                    this.y + BALL_R > CANVAS_HEIGHT && this.dy > 0;
+                },
+                bounceFromWall: function () {
+                    this.dy = -this.dy;
+                },
+                bounceFromPaddle: function () {
+                    this.dx = -this.dx;
+                },
+                moveToStart: function () {
+                    this.x = BALL_START_X;
+                    this.y = BALL_START_Y;
+                },
+                isOutsideOnLeft: function () {
+                    return this.x + BALL_R < 0;
+                },
+                isOutsideOnRight: function () {
+                    return this.x - BALL_R > CANVAS_WIDTH;
+                },
+                isOnTheSameHeightAsPaddle: function () {
+                    return isInBetween(this.y, paddleY, paddleY + PADDLE_HEIGHT);
+                },
+                shouldBounceFromLeftPaddle: function () {
+                    return this.dx < 0 && isInBetween(this.x - BALL_R, PADDLE_P1_X, PADDLE_P1_X + PADDLE_WIDTH) && isBallOnTheSameHeightAsPaddle(p1PaddleY);
+                },
+                shouldBounceFromRightPaddle: function () {
+                    return this.dx > 0 && isInBetween(this.x + BALL_R, PADDLE_P2_X, PADDLE_P2_X + PADDLE_WIDTH) && isBallOnTheSameHeightAsPaddle(p2PaddleY);
+                }
+
+            }
+        };
+
         function movePaddles() {
             if (p1Action === UP_ACTION) {
                 p1PaddleY = coercePaddle(p1PaddleY - PADDLE_STEP);
