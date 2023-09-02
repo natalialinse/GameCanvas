@@ -44,6 +44,8 @@
 
         const PAUSE_BUTTON = "KeyB";
 
+        const ball = Ball();
+
         ctx.fillStyle = "rgb(204, 0, 153)";
         ctx.font = "30px Arial";
 
@@ -134,11 +136,11 @@
                     this.x += this.dx;
                     this.y += this.dy;
                 },
-                shouldBounceFromTOpBall: function () {
-                    this.y < BALL_R && this.dy < 0;
+                shouldBounceFromTopWall: function () {
+                    return this.y < BALL_R && this.dy < 0;
                 },
-                shouldBounceFromBottomwall: function () {
-                    this.y + BALL_R > CANVAS_HEIGHT && this.dy > 0;
+                shouldBounceFromBottomWall: function () {
+                    return this.y + BALL_R > CANVAS_HEIGHT && this.dy > 0;
                 },
                 bounceFromWall: function () {
                     this.dy = -this.dy;
@@ -228,22 +230,22 @@
         }
 
         function moveBall() {
-            if (shouldBounceBallFromTopWall() || shouldBounceBallFromBottomWall()) {
-                bounceBallFromWall();
+            if (ball.shouldBounceFromTopWall() || ball.shouldBounceFromBottomWall()) {
+                ball.bounceFromWall();
             }
-            if (shouldBounceFromLeftPaddle() || shouldBounceFromRightPaddle()) {
-                bounceBallFromPaddle();
-            }
-
-            if (ballIsOutsideOnLeft()) {
-                moveBallToStart();
-                p2Points++;
-            } else if (ballIsOutsideOnRight()) {
-                moveBallToStart();
-                p1Points++;
+            if (ball.shouldBounceFromLeftPaddle() || ball.shouldBounceFromRightPaddle()) {
+                ball.bounceFromPaddle();
             }
 
-            moveBallByStep();
+            if (ball.isOutsideOnLeft()) {
+                ball.moveToStart();
+                p2.points++;
+            } else if (ball.isOutsideOnRight()) {
+                ball.moveToStart();
+                p1.points++;
+            }
+
+            ball.moveByStep();
         }
 
         function updateState() {
