@@ -33,7 +33,7 @@
         const STATE_CHANGE_INTERVAL = 10;
 
         const PADDLE_STEP = 3;
-        const P1_UP_BUTTON = 'KeyS';
+        const P1_UP_BUTTON = 'KeyA';
         const P1_DOWN_BUTTON = 'KeyZ';
         const P2_UP_BUTTON = 'KeyK';
         const P2_DOWN_BUTTON = 'KeyM';
@@ -45,6 +45,8 @@
         const PAUSE_BUTTON = "KeyB";
 
         const ball = Ball();
+        const p1 = Player();
+        const p2 = Player();
 
         ctx.fillStyle = "rgb(204, 0, 153)";
         ctx.font = "30px Arial";
@@ -94,22 +96,16 @@
         let p2Action = STOP_ACTION;
         let paused = false;
 
-        function coercePaddle(paddleY) {
-            const minPaddleY = 0;
-            const maxPaddleY = CANVAS_HEIGHT - PADDLE_HEIGHT;
-            return coerceIn(paddleY, minPaddleY, maxPaddleY);
-        }
-
         window.addEventListener('keydown', function (event) {
             let code = event.code;
             if (code === P1_UP_BUTTON) {
-                p1Action = UP_ACTION;
+                p1.action = UP_ACTION;
             } else if (code === P1_DOWN_BUTTON) {
-                p1Action = DOWN_ACTION;
+                p1.action = DOWN_ACTION;
             } else if (code === P2_UP_BUTTON) {
-                p2Action = UP_ACTION;
+                p2.action = UP_ACTION;
             } else if (code === P2_DOWN_BUTTON) {
-                p2Action = DOWN_ACTION;
+                p2.action = DOWN_ACTION;
             } else if (code === PAUSE_BUTTON) {
                 paused = !paused;
             }
@@ -117,10 +113,10 @@
 
         window.addEventListener('keyup', function (event) {
             let code = event.code;
-            if ((code === P1_UP_BUTTON && p1Action === UP_ACTION) || (code === P1_DOWN_BUTTON && p1Action === DOWN_ACTION)) {
-                p1Action = STOP_ACTION;
-            } else if ((code === P2_UP_BUTTON && p2Action === UP_ACTION) || (code === P2_DOWN_BUTTON && p2Action === DOWN_ACTION)) {
-                p2Action = STOP_ACTION;
+            if ((code === P1_UP_BUTTON && p1.action === UP_ACTION) || (code === P1_DOWN_BUTTON && p1.action === DOWN_ACTION)) {
+                p1.action = STOP_ACTION;
+            } else if ((code === P2_UP_BUTTON && p2.action === UP_ACTION) || (code === P2_DOWN_BUTTON && p2.action === DOWN_ACTION)) {
+                p2.action = STOP_ACTION;
             }
         });
 
@@ -158,30 +154,51 @@
                 isOutsideOnRight: function () {
                     return this.x - BALL_R > CANVAS_WIDTH;
                 },
-                isOnTheSameHeightAsPaddle: function () {
+                isOnTheSameHeightAsPaddle: function (paddleY) {
                     return isInBetween(this.y, paddleY, paddleY + PADDLE_HEIGHT);
                 },
                 shouldBounceFromLeftPaddle: function () {
-                    return this.dx < 0 && isInBetween(this.x - BALL_R, PADDLE_P1_X, PADDLE_P1_X + PADDLE_WIDTH) && isBallOnTheSameHeightAsPaddle(p1PaddleY);
+                    return this.dx < 0 && isInBetween(this.x - BALL_R, PADDLE_P1_X, PADDLE_P1_X + PADDLE_WIDTH) && this.isOnTheSameHeightAsPaddle(p1.paddle.y);
                 },
                 shouldBounceFromRightPaddle: function () {
-                    return this.dx > 0 && isInBetween(this.x + BALL_R, PADDLE_P2_X, PADDLE_P2_X + PADDLE_WIDTH) && isBallOnTheSameHeightAsPaddle(p2PaddleY);
+                    return this.dx > 0 && isInBetween(this.x + BALL_R, PADDLE_P2_X, PADDLE_P2_X + PADDLE_WIDTH) && this.isOnTheSameHeightAsPaddle(p2.paddle.y);
                 }
 
             }
         };
 
+        function Player(paddleX, boardX) {
+            return {
+                points: 0,
+                boardX: boardX,
+                action: STOP_ACTION,
+                paddle: {
+                    y: PADDLE_START_Y,
+                    setY: function (newY) {
+                        const minPaddleY = 0;
+                        const maxPaddleY = CANVAS_HEIGHT - PADDLE_HEIGHT;
+                        this.y = coerceIn(newY, minPaddleY, maxPaddleY);
+                    },
+                    stepDown: function () {
+                        this.setY(this.y + PADDLE_STEP);
+                    },
+                    stepUp: function () {
+                        this.setY(this.y - PADDLE_STEP);
+                    }
+                },
+                makeAction: function () {
+                    if (this.action === UP_ACTION) {
+                        this.paddle.stepUp();
+                    } else if (this.action === DOWN_ACTION) {
+                        this.paddle.stepDown();
+                    }
+                }
+            }
+        }
+
         function movePaddles() {
-            if (p1Action === UP_ACTION) {
-                p1PaddleY = coercePaddle(p1PaddleY - PADDLE_STEP);
-            } else if (p1Action === DOWN_ACTION) {
-                p1PaddleY = coercePaddle(p1PaddleY + PADDLE_STEP);
-            }
-            if (p2Action === UP_ACTION && p2PaddleY >= 0) {
-                p2PaddleY = coercePaddle(p2PaddleY - PADDLE_STEP);
-            } else if (p2Action === DOWN_ACTION) {
-                p2PaddleY = coercePaddle(p2PaddleY + PADDLE_STEP);
-            }
+            p1.makeAction();
+            p2.makeAction();
         }
 
         function shouldBounceBallFromTopWall() {
